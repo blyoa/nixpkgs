@@ -83,6 +83,9 @@ python3.pkgs.buildPythonApplication rec {
       xray
     ]);
 
+  # Apply a patch to prevent test failures due to warnings
+  patches = [ ./pytest.patch ];
+
   postFixup = ''
     # Disable telemetry: https://github.com/aws/aws-sam-cli/issues/1272
     wrapProgram $out/bin/sam \
@@ -106,18 +109,9 @@ python3.pkgs.buildPythonApplication rec {
     export PATH="$PATH:$out/bin:${lib.makeBinPath [ git ]}"
   '';
 
-  pytestFlagsArray =
-    [
-      "tests"
-      # Disable warnings
-      "-W"
-      "ignore::DeprecationWarning"
-    ]
-    ++ lib.optionals (stdenv.hostPlatform.isDarwin && stdenv.hostPlatform.isx86_64) [
-      # Disable warnings when falling back to kqueue
-      "-W"
-      "ignore::UserWarning:watchdog.observers"
-    ];
+  pytestFlagsArray = [
+    "tests"
+  ];
 
   disabledTestPaths = [
     # Disable tests that requires networking or complex setup
